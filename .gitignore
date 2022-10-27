@@ -6,6 +6,7 @@ __pycache__/
 # mnist
 *.gz
 *ubyte
+/data*
 
 # C extensions
 *.so
