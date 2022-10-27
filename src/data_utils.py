@@ -1,5 +1,7 @@
 
 import torchvision
+import torch
+
 class OccTransform:
     """sdfgasfga"""
 
@@ -14,9 +16,15 @@ class OccTransform:
         """
         sample is [n_channels, img_width, img_height]
         """
-        
+        print(sample.shape)
+        # you will hate the way I constructed this mask
+        mask = torch.zeros((112,112))
+        pad = torch.ones((112,112))
+        mask = torch.cat((mask, pad))
+        pad = torch.cat((pad, pad))
+        mask = torch.cat((mask, pad), axis=1)
 
-        # The crop is taken from original, unblurred image
-        cropped = torchvision.transforms.functional.crop()
+        assert mask.shape == sample[0].shape
+        cropped = mask * sample
 
         return cropped

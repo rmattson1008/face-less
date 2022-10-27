@@ -8,6 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 from torch.optim import Adam
 from torch.nn import CrossEntropyLoss
 import argparse
+from data_utils import OccTransform
 
 
 def train(args, model, loader):
@@ -43,6 +44,7 @@ def train(args, model, loader):
     return
 
 def test():
+
     return
 
 
@@ -64,7 +66,7 @@ if __name__ == "__main__":
     
 
     # lfw_train = datasets.LFWPeople(root: './data', split: str = '10fold', image_set: str = 'funneled', transform: Optional[Callable] = None, target_transform: Optional[Callable] = None, download: bool = False)
-    t = transforms.Compose([transforms.Resize(224),  transforms.ToTensor()])
+    t = transforms.Compose([transforms.Resize(224),  transforms.ToTensor(), OccTransform()])
     lfw_train = datasets.LFWPeople(root= './data', split= 'Train', image_set='deepfunneled', transform=t,  download= True)
     lfw_test = datasets.LFWPeople(root= './data', split= 'Test', image_set='deepfunneled', transform=t , download=True)
     print(len("Len data to train on"),lfw_train)
@@ -76,27 +78,12 @@ if __name__ == "__main__":
     model = VGG16(num_classes=5749)
     print(model)
 
-    # image = Image.open('samples/AJ_Cook/AJ_Cook.jpg')
-    # tensor_image = t(image)
-    # print(tensor_image.shape)
-    # inp = tensor_image.unsqueeze(dim=0)
     inp, y = next(iter(lfw_train))
     inp = inp.unsqueeze(dim=0)
     print(inp.shape)
     print('y')
 
     train(args, model, train_loader)
-
-
-    out = model(inp)
-   
-    for batch, batch_labels in train_loader:
-        out = model(batch)
-        print("Out")
-        # print(out)
-        print(out.shape)
-
-
 
     
 

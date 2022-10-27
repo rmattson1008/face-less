@@ -3,10 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# mnist
+# data
 *.gz
 *ubyte
-/data*
+data*
+*.jpg
+.vscode
 
 # C extensions
 *.so
