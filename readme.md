@@ -6,4 +6,6 @@ Rachel, Nicky, Olivia
 lfw dataset:
 http://vis-www.cs.umass.edu/lfw/#download
 
+deep funneled version
+
 
