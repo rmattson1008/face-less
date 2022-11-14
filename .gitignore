@@ -3,12 +3,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
+
 # data
 *.gz
 *ubyte
 data*
 *.jpg
 .vscode
+runs
 
 # C extensions
 *.so
