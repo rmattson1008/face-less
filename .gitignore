@@ -13,6 +13,9 @@ data*
 # C extensions
 *.so
 
+facelessenv
+dataTrash
+
 # Distribution / packaging
 .Python
 build/
