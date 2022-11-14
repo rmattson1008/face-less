@@ -9,6 +9,7 @@ from torch.optim import Adam
 from torch.nn import CrossEntropyLoss
 import argparse
 from data_utils import OccTransform
+from tqdm import tqdm
 
 
 def train(args, model, loader):
@@ -43,8 +44,19 @@ def train(args, model, loader):
 
     return
 
-def test():
-
+def test(args, model, test_loader):
+    print("Testing")
+    with torch.no_grad():
+        correct = 0
+        total = 0
+        for images, labels in tqdm(test_loader):
+            images = images.to(args.device)
+            labels = labels.to(args.device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+    print('Accuracy of the network on the {} test images: {} %'.format(10000, 100 * correct / total))   
     return
 
 
@@ -61,7 +73,7 @@ if __name__ == "__main__":
     args.add_argument('batch_size')
     args.batch_size = 16
     args.add_argument('epochs')
-    args.epochs = 10
+    args.epochs = 1
     print(args.epochs)
     
 
@@ -73,7 +85,7 @@ if __name__ == "__main__":
 
     #TODO - sample or randomize data
     train_loader = DataLoader(lfw_train, batch_size=16, shuffle=False)
-    train_loader = DataLoader(lfw_test, batch_size=16, shuffle=False)
+    test_loader = DataLoader(lfw_test, batch_size=16, shuffle=False)
 
     model = VGG16(num_classes=5749)
     print(model)
@@ -83,7 +95,8 @@ if __name__ == "__main__":
     print(inp.shape)
     print('y')
 
-    train(args, model, train_loader)
+    # train(args, model, train_loader)
+    test(args, model, test_loader)
 
     
 
