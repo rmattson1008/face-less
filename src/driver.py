@@ -12,6 +12,7 @@ from data_utils import OccTransform
 from tqdm import tqdm
 
 
+
 def train(args, model, loader):
     optimizer = Adam(model.parameters(), lr = args.lr)
     loss_fn = CrossEntropyLoss()
@@ -74,11 +75,12 @@ if __name__ == "__main__":
     args.batch_size = 16
     args.add_argument('epochs')
     args.epochs = 1
+    args.resize=224
     print(args.epochs)
     
 
     # lfw_train = datasets.LFWPeople(root: './data', split: str = '10fold', image_set: str = 'funneled', transform: Optional[Callable] = None, target_transform: Optional[Callable] = None, download: bool = False)
-    t = transforms.Compose([transforms.Resize(224),  transforms.ToTensor(), OccTransform()])
+    t = transforms.Compose([transforms.Resize(args.resize),  transforms.ToTensor(), OccTransform(mask_size=args.resize)])
     lfw_train = datasets.LFWPeople(root= './data', split= 'Train', image_set='deepfunneled', transform=t,  download= True)
     lfw_test = datasets.LFWPeople(root= './data', split= 'Test', image_set='deepfunneled', transform=t , download=True)
     print(len("Len data to train on"),lfw_train)
@@ -90,12 +92,12 @@ if __name__ == "__main__":
     model = VGG16(num_classes=5749)
     print(model)
 
-    inp, y = next(iter(lfw_train))
-    inp = inp.unsqueeze(dim=0)
-    print(inp.shape)
-    print('y')
+    # inp, y = next(iter(lfw_train))
+    # inp = inp.unsqueeze(dim=0)
+    # print(inp.shape)
+    # print('y', y)
 
-    # train(args, model, train_loader)
+    train(args, model, train_loader)
     test(args, model, test_loader)
 
     
