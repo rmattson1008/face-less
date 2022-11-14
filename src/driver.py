@@ -36,9 +36,8 @@ def train(args, model, train_loader, val_loader):
             optimizer.zero_grad()
             images = images.to(args.device)
             labels = labels.to(args.device)
-            # print(label)
-            # print(type(label))
-            # print(label.shape)
+
+            # TODO - send out input image to tensorboard to assert that trasforms are in order
             out = model(images)
             pred = out
             # print(pred)
@@ -115,13 +114,18 @@ if __name__ == "__main__":
     
 
     # lfw_train = datasets.LFWPeople(root: './data', split: str = '10fold', image_set: str = 'funneled', transform: Optional[Callable] = None, target_transform: Optional[Callable] = None, download: bool = False)
-    t = transforms.Compose([transforms.Resize(args.resize),  transforms.ToTensor(), OccTransform(mask_size=args.resize)])
+    t = transforms.Compose([transforms.Resize(args.resize),  transforms.ToTensor()])
     lfw_train = datasets.LFWPeople(root= './data', split= 'Train', image_set='deepfunneled', transform=t,  download= True)
     lfw_test = datasets.LFWPeople(root= './data', split= 'Test', image_set='deepfunneled', transform=t , download=True)
     # split = len(lfw_train) * .8
     # end = len(lfw_train)
     lfw_train,  lfw_val = torch.utils.data.random_split(lfw_train, [.8, .2], generator=torch.Generator().manual_seed(42))
     print(len("Len data to train on"), lfw_train)
+
+
+
+
+    lfw_train.transform = transforms.Compose([transforms.Resize(args.resize),  transforms.ToTensor(), OccTransform(mask_size=args.resize)])
 
     #TODO - sample or randomize data
     
