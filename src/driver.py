@@ -109,7 +109,7 @@ if __name__ == "__main__":
     args.batch_size = 16
     args.add_argument('epochs')
     args.epochs = 1
-    args.resize=224
+    args.resize = 224
     print(args.epochs)
     
 
@@ -117,17 +117,10 @@ if __name__ == "__main__":
     t = transforms.Compose([transforms.Resize(args.resize),  transforms.ToTensor()])
     lfw_train = datasets.LFWPeople(root= './data', split= 'Train', image_set='deepfunneled', transform=t,  download= True)
     lfw_test = datasets.LFWPeople(root= './data', split= 'Test', image_set='deepfunneled', transform=t , download=True)
-    # split = len(lfw_train) * .8
-    # end = len(lfw_train)
+
     lfw_train,  lfw_val = torch.utils.data.random_split(lfw_train, [.8, .2], generator=torch.Generator().manual_seed(42))
     print(len("Len data to train on"), lfw_train)
-
-
-
-
     lfw_train.transform = transforms.Compose([transforms.Resize(args.resize),  transforms.ToTensor(), OccTransform(mask_size=args.resize)])
-
-    #TODO - sample or randomize data
     
     train_loader = DataLoader(lfw_train, batch_size=16, shuffle=False)
     val_loader = DataLoader(lfw_val, batch_size=16, shuffle=False)
