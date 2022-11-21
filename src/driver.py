@@ -37,21 +37,21 @@ def set_seed(seed: int = 42) -> None:
     os.environ["PYTHONHASHSEED"] = str(seed)
     print(f"Random seed set as {seed}")
 
-
-"""
-Train Function
-
-"""
 def train(args, model, train_loader, val_loader):
+    """ Train Function"""
+
     optimizer = Adam(model.parameters(), lr = args.lr)
     loss_fn = CrossEntropyLoss()
 
     total_correct = 0
     train_acc = 0
 
-    comment = f' batch_size = {args.batch_size} lr = {args.lr} epochs = {args.epochs} model_name'
+    comment = f' batch_size = {args.batch_size} lr = {args.lr} epochs = {args.epochs} {args.model_name}'
     tb = SummaryWriter(comment=comment)
-    for epoch in tqdm(range(args.epochs)):
+    # log_dir = 'logs/tensorboard/'
+    # tb = tf.summary.create_file_writer(log_dir)
+
+    for epoch in range(args.epochs):
         train_loss = 0.0
         val_loss = 0.0
         total_correct = 0.0
@@ -60,57 +60,54 @@ def train(args, model, train_loader, val_loader):
         val_acc = 0.0
         num_batches_used = 0.0 
 
-        print("----- Epoch " + str(epoch) + " -----")
+        print("Epoch", epoch)
         for batch_idx, (images, labels) in enumerate(tqdm(train_loader)):
             optimizer.zero_grad()
             images = images.to(args.device)
             labels = labels.to(args.device)
 
             # TODO - send out input image to tensorboard to assert that trasforms are in order
-            #make prediction for batch
-            out = model(images)
-            pred = out
+            logits = model(images)
 
-            #compute loss and gradient 
-            loss = loss_fn(pred, labels)
+            #what is last layer of vgg? 
+            loss = loss_fn(logits, labels)
             loss.backward()
-            
-            #adjust learning rate
             optimizer.step()
 
-            #gather data and report
+            preds = logits.argmax(dim=1)
             train_loss += loss.item()
-            total_correct += out.argmax(dim=1).eq(labels).sum().item()
-            train_acc += total_correct / len(labels)
+
+            train_acc += (preds.eq(labels).sum().item() / len(labels))
+            
             num_batches_used = batch_idx + 1
 
-        #calculate Train Loss/Accuracy
-        train_loss = train_loss / num_batches_used
+        train_loss = (train_loss / num_batches_used)
         train_acc = train_acc / num_batches_used * 100
         tb.add_scalar("TrainLoss", train_loss, epoch)
         tb.add_scalar("TrainAccuracy", train_acc, epoch)
 
-        #calculate Validation Loss/Accuracy
-        for batch_idx, (inputs, labels) in enumerate(val_loader):
+        print("validating...")
+        for batch_idx, (inputs, labels) in enumerate(tqdm(val_loader)):
             inputs = inputs.to(args.device)
             labels = labels.to(args.device)
-            preds, _ = model(inputs)
-            loss = loss_fn(preds, labels)
+            logits = model(inputs)
+            loss = loss_fn(logits, labels)
+
+
+            preds = logits.argmax(dim=1)
+            # print(preds)
+            # print(labels)
 
             val_loss += loss.item()
-            other_val_loss += loss.item() 
-            val_total_correct += preds.argmax(dim=1).eq(labels).sum().item()
-            real_val_total_correct = preds.argmax(dim=1).eq(labels).sum().item()
-            val_acc += real_val_total_correct / len(labels)
+            # sum the accuracy for each batch, divide by number of batches later to get mean acc per epoch
+            val_acc += (preds.eq(labels).sum().item() / len(labels))
             num_batches_used = batch_idx + 1
 
-        #adding val loss/acc to tensorboard
         val_loss = val_loss / num_batches_used
-        val_acc = val_acc / num_batches_used * 100
+        val_acc = (val_acc / num_batches_used )* 100
+        print("val acc ", val_acc)
         tb.add_scalar("ValLoss", val_loss, epoch)
         tb.add_scalar("ValAccuracy", val_acc, epoch)
-
-
 
     tb.close()
     return
