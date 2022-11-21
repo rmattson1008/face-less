@@ -15,6 +15,7 @@ data*
 
 facelessenv
 dataTrash
+test_*.*
 
 # Distribution / packaging
 .Python
