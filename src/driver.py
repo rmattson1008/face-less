@@ -37,6 +37,7 @@ def set_seed(seed: int = 42) -> None:
     os.environ["PYTHONHASHSEED"] = str(seed)
     print(f"Random seed set as {seed}")
 
+
 def train(args, model, train_loader, val_loader):
     """ Train Function"""
 
@@ -54,8 +55,6 @@ def train(args, model, train_loader, val_loader):
     for epoch in range(args.epochs):
         train_loss = 0.0
         val_loss = 0.0
-        total_correct = 0.0
-        val_total_correct = 0.0
         train_acc = 0.0
         val_acc = 0.0
         num_batches_used = 0.0 
@@ -112,26 +111,23 @@ def train(args, model, train_loader, val_loader):
     tb.close()
     return
 
-
-"""
-Test Function
-
-"""
 def test(args, model, test_loader):
     print("Testing")
     with torch.no_grad():
-        correct = 0
-        total = 0
-        for (images, labels) in tqdm(test_loader):
+        test_acc = 0
+        for batch_idx, (images, labels) in enumerate(tqdm(test_loader)):
             images = images.to(args.device)
             labels = labels.to(args.device)
-            outputs = model(images)
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
-    print('Accuracy of the network on the {} test images: {} %'.format(10000, 100 * correct / total))  
-    return
 
+            logits = model(images)
+            preds = logits.argmax(dim=1)
+
+            test_acc += (preds.eq(labels).sum().item() / len(labels))
+            num_batches_used = batch_idx + 1
+
+    test_acc = (test_acc / num_batches_used) * 100 
+    print('Accuracy of the network on the test images: {} %'.format(test_acc)) 
+    return
 
 """
 Helper function for mean and sd for data normalization
@@ -165,8 +161,20 @@ Main Function
 
 """
 if __name__ == "__main__":
-    # mnist_trainset = datasets.MNIST(root='./data', train=True, download=True, transform=None)
-    # mnist_testset = datasets.MNIST(root='./data', train=False, download=True, transform=None)
+    
+# #create argparse for command line input
+# args = argparse.ArgumentParser()
+# args.add_argument('device')
+# args.device = 'cpu'
+# args.add_argument('lr')
+# args.lr = 0.0001
+# args.add_argument('batch_size')
+# args.batch_size = 16
+# args.add_argument('epochs')
+# args.epochs = 1
+# args.resize = 224
+# print(args.epochs)
+
 
     #create argparse for command line input
     parser = argparse.ArgumentParser(prog = 'Face-less', 
@@ -177,27 +185,42 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', default=16, type=int, help='Batch size. Default 32')
     parser.add_argument('--epochs', default=1, type=int, help='Number of epochs for CNN. Default 200')
     parser.add_argument('--resize', default=224, type=int, help='Size to resize input image to')
+    parser.add_argument('--model_name', default="vgg", type=str, help='model nickname just to make life easier')
+    # parser.add_argument('--resize', default=224, type=int, help='Size to resize input image to')
     args = parser.parse_args()
 
     #if gpu is available, run on cuda enabled gpu
     if torch.cuda.is_available(): 
         args.device = 'cuda'
+        print("using cuda")
 
 
     #download lfw deep funneled dataset if not downloaded
     # lfw_train = datasets.LFWPeople(root: './data', split: str = '10fold', image_set: str = 'funneled', transform: Optional[Callable] = None, target_transform: Optional[Callable] = None, download: bool = False)
 
 
-    t = transforms.Compose([transforms.Resize(args.resize),  
+    t1 = transforms.Compose([transforms.Resize(args.resize),  
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), #optional Normalization
-        OccTransform(True, mask_size=args.resize)]) #optional: boolean is for additional mask 
+        # OccTransform(True, mask_size=args.resize)
+        ]
+        ) #optional: boolean is for additional mask 
 
-    lfw_train = datasets.LFWPeople(root= './data', split= 'Train', image_set='deepfunneled', transform=t,  download= True)
-    lfw_test = datasets.LFWPeople(root= './data', split= 'Test', image_set='deepfunneled', transform=t , download=True)
+    t2 = transforms.Compose([transforms.Resize(args.resize),  
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]) #optional: boolean is for additional mask 
 
+    lfw_train = datasets.LFWPeople(root= './data', split= 'Train', image_set='deepfunneled', transform=t1,  download= True)
+    lfw_test = datasets.LFWPeople(root= './data', split= 'Test', image_set='deepfunneled', transform=t2 , download=True)
 
     lfw_train, lfw_val = torch.utils.data.random_split(lfw_train, [.8, .2], generator=torch.Generator().manual_seed(42))
+
+    # if issues with random split use this
+    # train_size = int(.8 * len(lfw_train))
+    # val_size = int(.2 * len(lfw_train))
+    # assert train_size + val_size == len(lfw_train)
+    # lfw_train,  lfw_val = torch.utils.data.random_split(lfw_train, [train_size, val_size], generator=torch.Generator().manual_seed(42))
+
 
     print("lfw_train: ", lfw_train)
     print("type lfw_train: ", type(lfw_train))
@@ -207,8 +230,6 @@ if __name__ == "__main__":
     train_loader = DataLoader(lfw_train, batch_size=16, shuffle=False)
     val_loader = DataLoader(lfw_val, batch_size=16, shuffle=False)
     test_loader = DataLoader(lfw_test, batch_size=16, shuffle=False)
-
-
 
 
     #VGG architectures for various implementaitons
@@ -223,23 +244,23 @@ if __name__ == "__main__":
     print("========== Build Model==========")
     model = VGG19(in_channels=3, in_height=224, in_width=224, num_classes=5749, architecture=VGG_types["VGG19"])
     model.to(args.device)
-    print("model: ", model)
+    # print("model: ", model)
 
 
 
-    print("========== Model Architecture ==========")
-    print(model) #show model architecture
+    # print("========== Model Architecture ==========")
+    # print(model) #show model architecture
 
 
-    print("========== Model Summary ==========")
-    print(model, (1,3,224,224)) #model summary
+    # print("========== Model Summary ==========")
+    # print(model, (1,3,224,224)) #model summary
 
 
     print("========== Train Model==========")
     train(args, model, train_loader, val_loader)
 
     print("========== Test Model==========")
-    # test(args, model, test_loader)
+    test(args, model, test_loader)
 
     # torch.save(model.state_dict(),  'model_weights.pth')
 
