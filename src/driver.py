@@ -71,6 +71,8 @@ def train(args, model, train_loader, val_loader):
             #what is last layer of vgg? 
             loss = loss_fn(logits, labels)
             loss.backward()
+            
+            #adjust learning rate
             optimizer.step()
 
             preds = logits.argmax(dim=1)
@@ -128,6 +130,32 @@ def test(args, model, test_loader):
     test_acc = (test_acc / num_batches_used) * 100 
     print('Accuracy of the network on the test images: {} %'.format(test_acc)) 
     return
+
+"""
+Helper function for mean and sd for data normalization
+"""
+def batch_mean_and_sd(loader):
+    
+    cnt = 0
+    fst_moment = torch.empty(3)
+    snd_moment = torch.empty(3)
+
+    for images, _ in loader:
+        b, c, h, w = images.shape
+        nb_pixels = b * h * w
+        sum_ = torch.sum(images, dim=[0, 2, 3])
+        sum_of_square = torch.sum(images ** 2,
+                                  dim=[0, 2, 3])
+        fst_moment = (cnt * fst_moment + sum_) / (
+                      cnt + nb_pixels)
+        snd_moment = (cnt * snd_moment + sum_of_square) / (
+                            cnt + nb_pixels)
+        cnt += nb_pixels
+
+    mean, std = fst_moment, torch.sqrt(
+      snd_moment - fst_moment ** 2)        
+    return mean,std
+  
 
 """
 Helper function for mean and sd for data normalization
@@ -221,6 +249,8 @@ if __name__ == "__main__":
     # assert train_size + val_size == len(lfw_train)
     # lfw_train,  lfw_val = torch.utils.data.random_split(lfw_train, [train_size, val_size], generator=torch.Generator().manual_seed(42))
 
+
+    lfw_train, lfw_val = torch.utils.data.random_split(lfw_train, [.8, .2], generator=torch.Generator().manual_seed(42))
 
     print("lfw_train: ", lfw_train)
     print("type lfw_train: ", type(lfw_train))
