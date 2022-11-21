@@ -42,52 +42,6 @@ def set_seed(seed: int = 42) -> None:
 Train Function
 
 """
-# def train(args, model, loader):
-#     #updates learning rates based on backward gradients of loss function
-#     #initialize adam optimizer using specified learning rate
-#     #   have to initialize after sending model to correct device
-#     optimizer = Adam(model.parameters(), lr = args.lr) #momentum = 0.9
-
-#     #initialize loss function
-#     loss_fn = CrossEntropyLoss() #good for multiclass loss
-#     running_loss = 0 #scope for return
-
-#     #train images using specified epochs
-#     for epoch in range(args.epochs):
-#         running_loss = 0.
-#         last_loss = 0.
-#         print("----- Epoch " + str(epoch) + " -----")
-#         for i, (images, label) in enumerate(loader):
-#             optimizer.zero_grad() #zero learning gradient
-#             images = images.to(args.device)
-#             label = label.to(args.device)
-#             print("label: ", label)
-#             print(type(label))
-#             print(label.shape)
-
-#             #make predictions for batch
-#             out = model(images) 
-#             pred = out
-#             print("prediction: ", pred)
-            
-#             #compute loss and gradient
-#             loss = loss_fn(pred, label)
-#             loss.backward()
-            
-#             #adjust learning rate
-#             optimizer.step()
-
-#             #gather data and report
-#             running_loss += loss.item()
-#             if i % 1000 == 999: #every 1000 losses, calculate loss per batch
-#                 last_loss = running_loss / 1000 # loss per batch
-#                 print('  batch {} loss: {}'.format(i + 1, last_loss))
-#                 tb_x = epoch * len(loader) + i + 1
-#                 print('Loss/train', last_loss)
-#                 running_loss = 0
-
-#     return running_loss #return running_loss for validation purposes
-
 def train(args, model, train_loader, val_loader):
     optimizer = Adam(model.parameters(), lr = args.lr)
     loss_fn = CrossEntropyLoss()
@@ -106,31 +60,37 @@ def train(args, model, train_loader, val_loader):
         val_acc = 0.0
         num_batches_used = 0.0 
 
-        print("Epoch", epoch)
+        print("----- Epoch " + str(epoch) + " -----")
         for batch_idx, (images, labels) in enumerate(tqdm(train_loader)):
             optimizer.zero_grad()
             images = images.to(args.device)
             labels = labels.to(args.device)
 
             # TODO - send out input image to tensorboard to assert that trasforms are in order
+            #make prediction for batch
             out = model(images)
             pred = out
-            # print(pred)
-            
+
+            #compute loss and gradient 
             loss = loss_fn(pred, labels)
             loss.backward()
+            
+            #adjust learning rate
             optimizer.step()
 
+            #gather data and report
             train_loss += loss.item()
             total_correct += out.argmax(dim=1).eq(labels).sum().item()
             train_acc += total_correct / len(labels)
             num_batches_used = batch_idx + 1
 
+        #calculate Train Loss/Accuracy
         train_loss = train_loss / num_batches_used
         train_acc = train_acc / num_batches_used * 100
         tb.add_scalar("TrainLoss", train_loss, epoch)
         tb.add_scalar("TrainAccuracy", train_acc, epoch)
 
+        #calculate Validation Loss/Accuracy
         for batch_idx, (inputs, labels) in enumerate(val_loader):
             inputs = inputs.to(args.device)
             labels = labels.to(args.device)
@@ -144,6 +104,7 @@ def train(args, model, train_loader, val_loader):
             val_acc += real_val_total_correct / len(labels)
             num_batches_used = batch_idx + 1
 
+        #adding val loss/acc to tensorboard
         val_loss = val_loss / num_batches_used
         val_acc = val_acc / num_batches_used * 100
         tb.add_scalar("ValLoss", val_loss, epoch)
@@ -151,9 +112,9 @@ def train(args, model, train_loader, val_loader):
 
 
 
-
     tb.close()
     return
+
 
 """
 Test Function
@@ -174,8 +135,9 @@ def test(args, model, test_loader):
     print('Accuracy of the network on the {} test images: {} %'.format(10000, 100 * correct / total))  
     return
 
+
 """
-helper function for mean and sd for data normalization
+Helper function for mean and sd for data normalization
 """
 def batch_mean_and_sd(loader):
     
@@ -199,9 +161,6 @@ def batch_mean_and_sd(loader):
       snd_moment - fst_moment ** 2)        
     return mean,std
   
-# mean, std = batch_mean_and_sd(loader)
-# print("mean and std: \n", mean, std)
-
 
 
 """
