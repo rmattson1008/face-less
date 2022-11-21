@@ -17,8 +17,8 @@ class OccTransform:
         """
         sample is [n_channels, img_width, img_height]
         """
-        print(sample.shape)
-        print(sample)
+        # print(sample.shape)
+        # print(sample)
 
         #upper-left mask 
         mask = torch.tensor([[0,1], [1,1]]).unsqueeze(0)    #(224, 224, 3) to (1, 3, 224, 224) 
