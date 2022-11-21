@@ -2,8 +2,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-#device = 'cpu'
+#device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu'
 """
 VGG architectures
 
@@ -95,7 +95,6 @@ class VGG19(nn.Module):
         x = self.convs(x).to(device)
         x = x.reshape(x.size(0), -1) #reshaped to nn.linear params
         x = self.fcs(x)
-        x.cuda()
         return x
     
     def init_fcs(self, architecture):
@@ -150,12 +149,4 @@ class VGG19(nn.Module):
                 )
 
         return nn.Sequential(*layers)
-
-# VGG_19 = VGG19(in_channels=3, in_height=224, in_width=224, num_classes=1000, architecture=VGG_types["VGG19"]).to(device)
-# print(VGG_19)
-# standard_in = torch.randn((1,3,224,224)).to(device)
-# print("shape std_in")
-# print(VGG_19(standard_in).shape)
-# # torch.Size([2,1000])
-
 
