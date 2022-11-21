@@ -4,10 +4,10 @@ import torch.nn as nn
 import torchvision.datasets as datasets
 from models import VGG16 #custom vgg16 model
 from vgg19 import VGG19
-from torchvision import transforms
+from torchvision import os
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriterm
 from torch.optim import Adam
 from torch.nn import CrossEntropyLoss
 import argparse
@@ -15,6 +15,21 @@ from data_utils import OccTransform
 from tqdm import tqdm
 import torchvision.transforms.functional as TF
 import numpy as np
+import random
+
+# Set random seed
+# shorturl.at/bKO38
+def set_seed(seed: int = 42) -> None:
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    # When running on the CuDNN backend, two further options must be set
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    # Set a fixed value for the hash seed
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    print(f"Random seed set as {seed}")
 
 
 
@@ -163,6 +178,9 @@ Main Function
 
 """
 if __name__ == "__main__":
+    # set random seed
+    set_seed()
+
     # mnist_trainset = datasets.MNIST(root='./data', train=True, download=True, transform=None)
     # mnist_testset = datasets.MNIST(root='./data', train=False, download=True, transform=None)
 
@@ -263,10 +281,10 @@ if __name__ == "__main__":
     # torch.backends.cudnn.enabled==False #resolves - cuDNN error: CUDNN_STATUS_MAPPING_ERROR
     #RuntimeError: cuDNN error: CUDNN_STATUS_EXECUTION_FAILED
     print("========== Train Model==========")
-    train(args, model, train_loader, val_loader)
+    #train(args, model, train_loader, val_loader)
 
     print("========== Test Model==========")
-    test(args, model, test_loader)
+    #test(args, model, test_loader)
 
     # torch.save(model.state_dict(),  'model_weights.pth')
 
