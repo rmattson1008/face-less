@@ -65,6 +65,7 @@ def train(args, model, train_loader, val_loader):
             images = images.to(args.device)
             labels = labels.to(args.device)
 
+
             # TODO - send out input image to tensorboard to assert that trasforms are in order
             logits = model(images)
 
@@ -210,7 +211,7 @@ if __name__ == "__main__":
                                     epilog = 'Program uses default arguments if none are specified')
     parser.add_argument('--device', default='cpu', help='Default cpu if cuda is not available.')
     parser.add_argument('--lr', default=0.0001, type=float, help='Learning rate for adam optimizer. Default 0.0001')
-    parser.add_argument('--batch_size', default=16, type=int, help='Batch size. Default 32')
+    parser.add_argument('--batch_size', default=32, type=int, help='Batch size. Default 32')
     parser.add_argument('--epochs', default=1, type=int, help='Number of epochs for CNN. Default 200')
     parser.add_argument('--resize', default=224, type=int, help='Size to resize input image to')
     parser.add_argument('--model_name', default="vgg", type=str, help='model nickname just to make life easier')
@@ -238,8 +239,8 @@ if __name__ == "__main__":
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]) #optional: boolean is for additional mask 
 
-    lfw_train = datasets.LFWPeople(root= './data', split= 'Train', image_set='deepfunneled', transform=t1,  download= True)
-    lfw_test = datasets.LFWPeople(root= './data', split= 'Test', image_set='deepfunneled', transform=t2 , download=True)
+    lfw_train = datasets.LFWPeople(root= './data', split= 'Train', image_set='deepfunneled', transform=t1,  download=False)
+    lfw_test = datasets.LFWPeople(root= './data', split= 'Test', image_set='deepfunneled', transform=t2 , download=False)
 
     lfw_train, lfw_val = torch.utils.data.random_split(lfw_train, [.8, .2], generator=torch.Generator().manual_seed(42))
 
@@ -278,8 +279,8 @@ if __name__ == "__main__":
 
 
 
-    # print("========== Model Architecture ==========")
-    # print(model) #show model architecture
+    #print("========== Model Architecture ==========")
+    #print(model) #show model architecture
 
 
     # print("========== Model Summary ==========")
