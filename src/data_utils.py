@@ -5,13 +5,16 @@ from torchvision.transforms.functional import InterpolationMode
 
 class OccTransform:
 
-    def __init__(self, transform, mask_size=224): 
+    def __init__(self,p=0.5, mask_size=224, quadrant = [[0,1], [1,1]]): 
         """
             width and hieght extend from (0,0) which is the left corner of an image
             Default mask upper-left occlusion
         """
         self.mask_size = mask_size
-        self.transform = transform 
+        # self.transform = transform 
+        # assert quadrant.shape == (2,2)
+        self.quadrant = quadrant
+        self.p = p
 
     def __call__(self, sample):
         """
@@ -21,11 +24,11 @@ class OccTransform:
         # print(sample)
 
         #upper-left mask 
-        mask = torch.tensor([[0,1], [1,1]]).unsqueeze(0)    #(224, 224, 3) to (1, 3, 224, 224) 
+        mask = torch.tensor([[1,1], [1,1]]).unsqueeze(0)    #(224, 224, 3) to (1, 3, 224, 224) 
 
         #applying custom transform
-        if self.transform:
-            mask = torch.tensor([[0,1], [0,1]]).unsqueeze(0)    
+        if torch.rand(1) < self.p:
+            mask = torch.tensor(self.quadrant).unsqueeze(0)    
         
         mask = T.Resize(self.mask_size, interpolation=InterpolationMode.NEAREST)(mask)
 
