@@ -92,7 +92,7 @@ class VGG19(nn.Module):
         self.fcs = self.init_fcs(architecture)
         
     def forward(self, x):
-        x = self.convs(x).to(device)
+        x = self.convs(x)
         x = x.reshape(x.size(0), -1) #reshaped to nn.linear params
         x = self.fcs(x)
         return x
